@@ -1,0 +1,51 @@
+import numpy as np
+import os
+import cv2
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, accuracy_score
+
+# Function to load images from directory
+def load_images_from_folder(folder):
+    images = []
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder, filename))
+        if img is not None:
+            images.append(img)
+    return images
+
+# Path to your dataset folder containing 'cats' and 'dogs' subfolders
+data_path = "path_to_your_dataset_folder"
+
+# Load images of cats and dogs
+cats = load_images_from_folder(os.path.join(data_path, 'cats'))
+dogs = load_images_from_folder(os.path.join(data_path, 'dogs'))
+
+# Create labels for cats (0) and dogs (1)
+labels = [0] * len(cats) + [1] * len(dogs)
+
+# Convert images to grayscale and resize them (you can preprocess images as needed)
+cat_images = [cv2.resize(cv2.cvtColor(cat, cv2.COLOR_BGR2GRAY), (100, 100)) for cat in cats]
+dog_images = [cv2.resize(cv2.cvtColor(dog, cv2.COLOR_BGR2GRAY), (100, 100)) for dog in dogs]
+
+# Flatten images
+cat_images = [img.flatten() for img in cat_images]
+dog_images = [img.flatten() for img in dog_images]
+
+# Combine cat and dog images
+data = np.array(cat_images + dog_images)
+labels = np.array(labels)
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+
+# Train SVM classifier
+svm = SVC(kernel='linear')
+svm.fit(X_train, y_train)
+
+# Predictions
+y_pred = svm.predict(X_test)
+
+# Evaluate the model
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
